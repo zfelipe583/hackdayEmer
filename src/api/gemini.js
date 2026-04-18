@@ -3,7 +3,7 @@ import tramitesData from '../constants/tramites.json';
 
 // OJO: Para el hackatón pon tu llave aquí directo, 
 // pero recuerda NO subir este archivo a un repositorio público (GitHub).
-const API_KEY = "PON_AQUI_TU_API_KEY_DE_GEMINI"; 
+const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 
