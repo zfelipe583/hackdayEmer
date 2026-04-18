@@ -1,28 +1,72 @@
-import React, { useState, useRef } from 'react'; // 1. Añadimos useRef
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TextInput, 
+  TouchableOpacity, 
+  FlatList, 
+  KeyboardAvoidingView, 
+  Platform, 
+  ActivityIndicator, 
+  Linking, 
+  Alert 
+} from 'react-native';
 import { consultarTramiteIA } from '../api/gemini';
 
 export default function ChatModeScreen({ navigation }) {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const flatListRef = useRef(null); // 2. Referencia para el scroll
+  const flatListRef = useRef(null);
 
   const [mensajes, setMensajes] = useState([
     {
       id: '1',
       emisor: 'bot',
-      texto: '¡Hola! Para ayudarte mejor, cuéntame un poco de la historia de lo que deseas hacer o qué problema tienes hoy.',
+      texto: '¡Hola! Soy GuanajuaBot. Cuéntame qué trámite necesitas para darte los pasos a seguir.',
       tramite: null
     }
   ]);
 
+  // Función para validar si un texto es un enlace real
+  const esEnlaceValido = (texto) => {
+    if (!texto) return false;
+    const patronUrl = new RegExp(/^(https?:\/\/)/); // Verifica que empiece con http:// o https://
+    return patronUrl.test(texto);
+  };
+
+  const manejarAccionTramite = async (enlace, dependencia) => {
+    if (esEnlaceValido(enlace)) {
+      try {
+        const supported = await Linking.canOpenURL(enlace);
+        if (supported) {
+          await Linking.openURL(enlace);
+        } else {
+          Alert.alert("Error", "No se pudo abrir el enlace en el navegador.");
+        }
+      } catch (error) {
+        Alert.alert("Error", "Hubo un problema al intentar abrir la página.");
+      }
+    } else {
+      // Si el enlace no es válido o es texto descriptivo, mostramos la oficina
+      Alert.alert(
+        "Trámite Presencial", 
+        `Para este trámite debe acudir a: ${dependencia}.`
+      );
+    }
+  };
+
   const enviarMensaje = async () => {
     if (inputText.trim() === '') return;
 
-    const nuevoMensajeUsuario = { id: Date.now().toString(), emisor: 'user', texto: inputText, tramite: null };
-    setMensajes((prev) => [...prev, nuevoMensajeUsuario]);
+    const nuevoMensajeUsuario = { 
+      id: Date.now().toString(), 
+      emisor: 'user', 
+      texto: inputText, 
+      tramite: null 
+    };
     
-    // 3. Hacer scroll al final después de enviar
+    setMensajes((prev) => [...prev, nuevoMensajeUsuario]);
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
 
     const textoAEnviar = inputText;
@@ -40,26 +84,36 @@ export default function ChatModeScreen({ navigation }) {
 
     setMensajes((prev) => [...prev, respuestaBot]);
     setIsLoading(false);
-    
-    // Scroll de nuevo cuando llega la respuesta
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
-  // ... (TarjetaTramite y renderMensaje se mantienen igual)
   const TarjetaTramite = ({ tramite }) => {
     if (!tramite || Object.keys(tramite).length === 0) return null;
+
+    const tieneLink = esEnlaceValido(tramite.enlace);
+
     return (
       <View style={styles.tarjeta}>
         <Text style={styles.tarjetaTitulo}>{tramite.nombre}</Text>
         <Text style={styles.tarjetaDato}>🏢 <Text style={styles.bold}>Dependencia:</Text> {tramite.dependencia}</Text>
         <Text style={styles.tarjetaDato}>💰 <Text style={styles.bold}>Costo:</Text> {tramite.costo}</Text>
         <Text style={styles.tarjetaDato}>💻 <Text style={styles.bold}>Modalidad:</Text> {tramite.modalidad}</Text>
+        
         <Text style={[styles.tarjetaDato, styles.bold, { marginTop: 10 }]}>📋 Requisitos:</Text>
         {tramite.requisitos && tramite.requisitos.map((req, index) => (
           <Text key={index} style={styles.requisitoItem}>• {req}</Text>
         ))}
-        <TouchableOpacity style={styles.botonTramite}>
-          <Text style={styles.textoBotonTramite}>Iniciar Trámite</Text>
+        
+        <TouchableOpacity 
+          style={[
+            styles.botonTramite, 
+            !tieneLink && { backgroundColor: '#6B7280' } // Cambia a gris si no es link
+          ]} 
+          onPress={() => manejarAccionTramite(tramite.enlace, tramite.dependencia)}
+        >
+          <Text style={styles.textoBotonTramite}>
+            {tieneLink ? "Iniciar Trámite" : "Ve a las oficinas"}
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -80,9 +134,7 @@ export default function ChatModeScreen({ navigation }) {
   return (
     <KeyboardAvoidingView 
       style={styles.container} 
-      // 4. Mejoramos el behavior y el offset
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0} 
     >
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.btnVolver}>
@@ -92,26 +144,25 @@ export default function ChatModeScreen({ navigation }) {
       </View>
 
       <FlatList
-        ref={flatListRef} // 5. Asignamos la referencia
+        ref={flatListRef}
         data={mensajes}
         keyExtractor={(item) => item.id}
         renderItem={renderMensaje}
         contentContainerStyle={styles.listaMensajes}
-        // 6. Asegura que el contenido se empuje hacia arriba
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
       />
 
       {isLoading && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color="#004A98" />
-          <Text style={styles.loadingText}>El asistente está escribiendo...</Text>
+          <Text style={styles.loadingText}>Consultando trámites...</Text>
         </View>
       )}
 
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Escribe tu situación aquí..."
+          placeholder="Escribe tu mensaje aquí..."
           value={inputText}
           onChangeText={setInputText}
           multiline
@@ -137,7 +188,7 @@ const styles = StyleSheet.create({
   btnVolver: { marginRight: 15 },
   txtVolver: { color: '#004A98', fontSize: 16, fontWeight: 'bold' },
   headerTitulo: { fontSize: 20, fontWeight: 'bold', color: '#111827' },
-  listaMensajes: { padding: 15, paddingBottom: 20 }, // Ajustado padding
+  listaMensajes: { padding: 15, paddingBottom: 20 },
   burbujaContenedor: { maxWidth: '85%', padding: 15, borderRadius: 15, marginBottom: 15 },
   burbujaBot: { backgroundColor: '#FFFFFF', alignSelf: 'flex-start', borderBottomLeftRadius: 0 },
   burbujaUsuario: { backgroundColor: '#004A98', alignSelf: 'flex-end', borderBottomRightRadius: 0 },
@@ -160,7 +211,7 @@ const styles = StyleSheet.create({
   loadingText: { marginLeft: 10, color: '#6B7280', fontStyle: 'italic' },
   inputContainer: { 
     flexDirection: 'row', padding: 10, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E5E7EB',
-    marginBottom: Platform.OS === 'ios' ? 20 : 0 // Espacio extra para el home indicator de iOS
+    paddingBottom: Platform.OS === 'ios' ? 30 : 10
   },
   input: { 
     flex: 1, backgroundColor: '#F3F4F6', borderRadius: 20, paddingHorizontal: 15, paddingVertical: 10, 
