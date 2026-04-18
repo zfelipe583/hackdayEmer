@@ -1,64 +1,67 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import tramitesData from '../constants/tramites.json';
+// Importamos directamente tu archivo de datos desde resources
+import dataGto from '../resources/data_gto.json';
 
-// OJO: Para el hackatón pon tu llave aquí directo, 
-// pero recuerda NO subir este archivo a un repositorio público (GitHub).
 const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-
 const genAI = new GoogleGenerativeAI(API_KEY);
 
-// Usamos 2.5 Flash porque es el modelo más rápido, ideal para cumplir tu meta de <10s
 const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash",
-  systemInstruction: `Eres un asistente virtual del Gobierno del Estado de Guanajuato. Tu objetivo es la inclusión digital.
-Hablas con ciudadanos (muchos de ellos de zonas rurales o adultos mayores) que te cuentan su historia o problema.
-Eres extremadamente paciente, claro, empático y usas lenguaje sencillo, cero burocrático.
-
-Este es tu catálogo de trámites oficiales:
-${JSON.stringify(tramitesData)}
-
-INSTRUCCIONES DE RESPUESTA:
-1. Escucha la historia del usuario.
-2. Identifica cuál de los trámites del catálogo necesita.
-3. Responde PRIMERO con un mensaje empático y conversacional (máximo 3 líneas).
-4. LUEGO, agrega EXACTAMENTE este separador: |||
-5. FINALMENTE, devuelve ÚNICAMENTE el objeto JSON del trámite correspondiente. Si no estás seguro, devuelve un JSON vacío {}.
-
-EJEMPLO DE RESPUESTA:
-¡Hola! Entiendo lo frustrante que es perder los papeles. No te preocupes, para reponer tu documento oficial necesitas este trámite, es muy rápido:
-|||
-{
-  "id": 1,
-  "categoria": "Civil",
-  "nombre": "Certificación acta nacimiento",
-  "costo": "$130.00"
-  // ... resto de los datos del trámite
-}`
+  model: "gemini-3-flash-preview",
+  generationConfig: { 
+    responseMimeType: "application/json" 
+  }
 });
 
 export const consultarTramiteIA = async (historiaUsuario) => {
+  // Convertimos tu JSON de trámites a texto para que la IA lo conozca
+  const inventarioTexto = JSON.stringify(dataGto);
+
+  const promptSistema = `**CONTEXTO DE DATOS:**
+Eres "GuanajuaBot", un guía experto en trámites de Guanajuato. Tienes acceso a un inventario de trámites con enlaces y teléfonos de contacto.
+
+**OBJETIVO:**
+Ayudar a ciudadanos (especialmente adultos mayores o personas de zonas rurales) a entender qué hacer. Debes ser muy concreto y amigable.
+
+**REGLAS DE RESPUESTA (ESTRICTO JSON):**
+Responde exclusivamente con este formato:
+{
+  "mensajeEmpatico": "Texto cálido de máx 3 líneas. Usa frases como '¡Qué tal! No se preocupe'.",
+  "datosTramite": {
+    "nombre": "Nombre del trámite",
+    "dependencia": "Oficina encargada",
+    "costo": "Precio",
+    "modalidad": "Cómo hacerlo (en persona o celular)",
+    "requisitos": ["Paso 1: Juntar tal papel", "Paso 2: Hacer el pago"],
+    "enlace": "URL del trámite",
+    "contacto": "Texto amigable con el teléfono y extensión"
+  }
+}
+
+**INSTRUCCIONES DE LENGUAJE:**
+1. **El Enlace:** No digas "Clic en el link". Di: "Presione las letras azules que aparecen aquí abajo para entrar a la página".
+2. **El Teléfono:** Si hay un número, agrégalo al campo 'contacto' diciendo: "Si se siente más cómodo, puede llamar al [Teléfono] y pedir la extensión [Ext]".
+3. **Casos Especiales:** Si no encuentras el trámite, datosTramite debe ser null y el mensaje debe invitar a preguntar de nuevo o ir a la oficina más cercana.
+4. **Simplificación:** Traduce términos difíciles. En lugar de "Certificación", di "Sacar su papel oficial".
+  `;
+
   try {
-    const result = await model.generateContent(historiaUsuario);
-    const responseText = result.response.text();
+    const result = await model.generateContent([
+      promptSistema, 
+      `Pregunta del ciudadano: ${historiaUsuario}`
+    ]);
     
-    // Separamos el texto empático de los datos puros
-    const partes = responseText.split('|||');
-    const mensajeEmpatico = partes[0].trim();
-    let datosTramite = null;
+    const responseText = result.response.text();
+    const jsonFinal = JSON.parse(responseText);
 
-    if (partes.length > 1) {
-      try {
-        datosTramite = JSON.parse(partes[1].trim());
-      } catch (e) {
-        console.log("Error parseando el JSON de Gemini:", e);
-      }
-    }
-
-    return { mensajeEmpatico, datosTramite };
-  } catch (error) {
-    console.error("Error consultando a Gemini:", error);
     return { 
-      mensajeEmpatico: "Tuvimos un pequeño problema de conexión. ¿Podrías volver a contarme qué trámite buscas?", 
+      mensajeEmpatico: jsonFinal.mensajeEmpatico, 
+      datosTramite: jsonFinal.datosTramite 
+    };
+
+  } catch (error) {
+    console.error("Error en GuanajuaBot:", error);
+    return { 
+      mensajeEmpatico: "¡Ay! Perdone, se me trabó un poquito el sistema. ¿Me puede repetir su duda?", 
       datosTramite: null 
     };
   }

@@ -1,0 +1,143 @@
+
+[
+  {
+    "id": 1,
+    "categoria": "Civil",
+    "nombre": "Certificación acta nacimiento",
+    "costo": "$130.00",
+    "modalidad": "En línea / Presencial",
+    "enlace": "https://sgenlinea.guanajuato.gob.mx/menu",
+    "dependencia": "Dirección General del Registro Civil",
+    "requisitos": [
+        "Nombre completo", 
+        "Pago de derechos"
+    ],
+    "contacto": { 
+        "oficina": "Registro Civil Guanajuato", 
+        "telefono": "4731022000", 
+        "ext": "5409" 
+    }
+  },
+  {
+    "id": 2,
+    "categoria": "Civil",
+    "nombre": "Certificación acta matrimonio",
+    "costo": "$130.00",
+    "modalidad": "En línea / Presencial",
+    "enlace": "https://sgenlinea.guanajuato.gob.mx/menu",
+    "dependencia": "Dirección General del Registro Civil",
+    "requisitos": [
+       "Nombres de los contrayentes",
+       "Fecha de matrimonio", 
+       "Pago de derechos"
+      ],
+    "contacto": { 
+      "oficina": "Registro Civil Guanajuato", 
+      "telefono": "4731022000", 
+      "ext": "5412" 
+    }
+  },
+  {
+    "id": 3,
+    "categoria": "Civil",
+    "nombre": "Certificación acta defunción",
+    "costo": "$130.00",
+    "modalidad": "En línea / Presencial",
+    "enlace": "https://sgenlinea.guanajuato.gob.mx/menu",
+    "dependencia": "Dirección General del Registro Civil",
+    "requisitos": [
+        "Nombre del finado", 
+        "Fecha de defunción", 
+        "Pago de derechos"
+      ],
+    "contacto": { 
+      "oficina": "Registro Civil Guanajuato", 
+      "telefono": "4731022000", 
+      "ext": "5418" 
+    }
+  },
+  {
+    "id": 4,
+    "categoria": "Vehicular",
+    "nombre": "Pago de refrendo vehicular",
+     "costo": "$564.00",
+     "modalidad": "En línea / Presencial",
+     "enlace": "https://refrendo.guanajuato.gob.mx",
+    "dependencia": "SATEG",
+    "requisitos": [
+        "Número de placa", 
+        "Número de serie (VIN)", 
+        "Pago en línea"
+      ],
+    "contacto": { 
+      "oficina": "Portal SATEG", 
+      "telefono": "8004374371", 
+      "ext": "Soporte" 
+    }
+  },
+    {
+    "id": 5,
+    "categoria": "Vehicular",
+    "nombre": "Alta de vehículos usados",
+    "dependencia": "SATEG",
+    "costo": "$1,732.00",
+    "modalidad": "Presencial",
+    "enlace": "null",
+    "requisitos": [
+        "Identificación oficial", 
+        "Factura original", 
+        "Comprobante domicilio",
+        "Factura/Carta factura", 
+        "Copia de Factura", 
+        "INE original y copia", 
+        "Acta Constitutiva", 
+        "No adeudo", 
+        "Recibo de pago", 
+        "Baja de vehiculo", 
+        "Constancia repuve" ],
+    "contacto": { 
+      "oficina": "Servicios Fiscales", 
+      "telefono": "8004374371", 
+      "ext": "SATEG" }
+  },
+  {
+    "id": 6,
+    "categoria": "Vehicular",
+    "nombre": "Alta de vehículos nuevos",
+    "costo": "$1,732.00",
+    "modalidad": "Presencial",
+    "enlace": "null",
+    "dependencia": "SATEG",
+    "requisitos": [
+        "INE original y copia",
+        "Comprobante domicilio",
+        "Factura original",
+        "Acta Constitutiva",
+        "No adeudo",
+        "Constancia repuve"],
+    "contacto": { 
+      "oficina": "Atención Fiscal", 
+      "telefono": "8004374371", 
+      "ext": "SATEG" }
+  },
+  {
+    "id": 7,
+    "categoria": "Vehicular",
+    "nombre": "Baja de vehículos de motor",
+     "costo": "$373.00",
+     "modalidad": "Presencial",
+     "enlace": "null",
+    "dependencia": "SATEG",
+    "requisitos": [
+        "Placas metálicas", 
+        "Tarjeta circulación", 
+        "No adeudos",
+        "INE original y copia"
+      ],
+    "contacto": { 
+      "oficina": "Oficinas Fiscales", 
+      "telefono": "8004374371", 
+      "ext": "SATEG"
+    }
+  }
+]
